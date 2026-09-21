@@ -397,7 +397,8 @@ st.markdown(f"""
 @import url('https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600;700&display=swap');
 html, body, [class*="css"], .stApp {{ font-family: 'Sarabun', 'TH Sarabun New', sans-serif; }}
 #MainMenu, footer, [data-testid="stToolbar"] {{ visibility: hidden; }}
-.block-container {{ padding-top: 3rem; max-width: 1200px; }}
+header[data-testid="stHeader"] {{ background: transparent; }}
+.block-container {{ padding-top: 5rem; max-width: 1200px; }}
 .banner {{ background: #{NAVY}; color: #fff; padding: 1.1rem 1.6rem; border-radius: 6px; margin-bottom: 1.2rem; }}
 .banner h1 {{ color: #fff; margin: 0; font-size: 1.7rem; font-weight: 700; padding: 0; }}
 .banner p {{ color: #D9E1F2; margin: .2rem 0 0; font-size: 1rem; }}
