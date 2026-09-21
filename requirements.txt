@@ -3,3 +3,4 @@ pandas
 openpyxl
 opencv-python-headless
 numpy
+pymupdf
