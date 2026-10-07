@@ -390,38 +390,194 @@ def build_workbook(key, students, meta=None):
 
 
 # ------------------------------------------------------------------ UI ----
-st.set_page_config(page_title="ระบบตรวจข้อสอบ OMR", layout="wide")
+st.set_page_config(page_title="ระบบตรวจข้อสอบ OMR", page_icon="📝", layout="wide")
 
 st.markdown(f"""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600;700&display=swap');
-html, body, [class*="css"], .stApp {{ font-family: 'Sarabun', 'TH Sarabun New', sans-serif; }}
+
+html, body, [class*="css"], .stApp {{
+    font-family: 'Sarabun', 'TH Sarabun New', sans-serif;
+    background: linear-gradient(180deg, #F6F8FC 0%, #EEF1F8 100%);
+}}
 #MainMenu, footer, [data-testid="stToolbar"] {{ visibility: hidden; }}
 header[data-testid="stHeader"] {{ background: transparent; }}
-.block-container {{ padding-top: 5rem; max-width: 1200px; }}
-.banner {{ background: #{NAVY}; color: #fff; padding: 1.1rem 1.6rem; border-radius: 6px; margin-bottom: 1.2rem; }}
-.banner h1 {{ color: #fff; margin: 0; font-size: 1.7rem; font-weight: 700; padding: 0; }}
-.banner p {{ color: #D9E1F2; margin: .2rem 0 0; font-size: 1rem; }}
-.step {{ border-left: 4px solid #{NAVY}; padding-left: .7rem; margin: .4rem 0 .6rem;
-        font-weight: 700; font-size: 1.15rem; color: #{NAVY}; }}
-[data-testid="stMetric"] {{ background: #F3F5F9; border: 1px solid #D9E1F2; border-radius: 6px; padding: .7rem 1rem; }}
-.rank-card {{ border: 1px solid #D9E1F2; border-top: 4px solid #C9A227; border-radius: 6px; padding: .8rem 1rem; background: #FFFDF5; }}
-.rank-no {{ color: #{NAVY}; font-weight: 700; }}
-.rank-score {{ font-size: 2rem; font-weight: 700; color: #{NAVY}; line-height: 1.2; }}
-.rank-score span {{ font-size: 1rem; color: #7F7F7F; font-weight: 400; }}
-.rank-name {{ font-weight: 600; word-break: break-all; }}
-.rank-sub {{ color: #595959; font-size: .9rem; }}
-[data-testid="stMetricLabel"] {{ color: #595959; }}
+
+.block-container {{
+    padding-top: 4rem;
+    padding-bottom: 3rem;
+    max-width: 1200px;
+}}
+
+/* ========== แบนเนอร์หัวเว็บ ========== */
+.banner {{
+    background: linear-gradient(135deg, #1F3864 0%, #2C4A8A 60%, #16284D 100%);
+    color: #fff;
+    padding: 2.2rem 2.5rem;
+    border-radius: 14px;
+    margin-bottom: 2rem;
+    box-shadow: 0 10px 30px rgba(31, 56, 100, 0.25);
+    position: relative;
+    overflow: hidden;
+}}
+.banner::after {{
+    content: "";
+    position: absolute; top: -40%; right: -10%;
+    width: 300px; height: 300px;
+    background: radial-gradient(circle, rgba(201,162,39,0.25) 0%, transparent 70%);
+}}
+.banner h1 {{
+    color: #fff; margin: 0; font-size: 2rem; font-weight: 700;
+    display: flex; align-items: center; gap: .6rem;
+    position: relative; z-index: 1;
+}}
+.banner p {{
+    color: #D9E1F2; margin: .5rem 0 0; font-size: 1.05rem; font-weight: 400;
+    position: relative; z-index: 1;
+}}
+.banner .badge {{
+    display: inline-block;
+    background: rgba(201,162,39,0.2);
+    border: 1px solid #C9A227;
+    color: #FFE9A8;
+    padding: .25rem .9rem;
+    border-radius: 999px;
+    font-size: .8rem;
+    margin-top: .9rem;
+    position: relative; z-index: 1;
+}}
+
+/* ========== การ์ดขั้นตอน ========== */
+.step {{
+    background: #fff;
+    border-radius: 12px;
+    padding: 1.2rem 1.4rem;
+    margin-bottom: 1rem;
+    box-shadow: 0 2px 10px rgba(16, 24, 40, 0.06);
+    border-left: 4px solid #1F3864;
+    transition: box-shadow .15s ease;
+}}
+.step:hover {{ box-shadow: 0 4px 16px rgba(16, 24, 40, 0.10); }}
+.step h3 {{
+    font-weight: 700; font-size: 1.15rem; color: #1F3864;
+    margin: 0; padding: 0; display: flex; align-items: center; gap: .5rem;
+}}
+.step-num {{
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 26px; height: 26px; border-radius: 50%;
+    background: #1F3864; color: #fff; font-size: .85rem; font-weight: 700;
+    flex-shrink: 0;
+}}
+
+/* ========== กล่องตัวเลขสรุป (Metric) ========== */
+[data-testid="stMetric"] {{
+    background: #fff;
+    border: 1px solid #E5E9F2;
+    border-radius: 12px;
+    padding: 1rem 1.2rem;
+    box-shadow: 0 2px 8px rgba(16,24,40,0.04);
+    transition: transform .15s ease, box-shadow .15s ease;
+}}
+[data-testid="stMetric"]:hover {{
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(16,24,40,0.10);
+}}
+[data-testid="stMetricLabel"] {{ color: #5B6472; font-weight: 600; }}
+[data-testid="stMetricValue"] {{ color: #1F3864; }}
+
+/* ========== การ์ดแสดงอันดับ/คะแนน ========== */
+.rank-card {{
+    background: #fff;
+    border: 1px solid #E5E9F2;
+    border-top: 4px solid #C9A227;
+    border-radius: 12px;
+    padding: 1rem 1.2rem;
+    margin-bottom: .6rem;
+    box-shadow: 0 2px 8px rgba(16,24,40,0.05);
+    transition: transform .15s ease, box-shadow .15s ease;
+}}
+.rank-card:hover {{
+    transform: translateY(-3px);
+    box-shadow: 0 8px 20px rgba(16,24,40,0.10);
+}}
+.rank-no {{ color: #1F3864; font-weight: 700; font-size: 1.1rem; }}
+.rank-name {{ font-weight: 600; word-break: break-all; color: #1A1A1A; }}
+.rank-score {{ font-size: 1.8rem; font-weight: 700; color: #1F3864; }}
+.rank-score span {{ font-size: .95rem; color: #7F7F7F; font-weight: 400; }}
+.rank-sub {{ color: #595959; font-size: .85rem; }}
+
+/* ========== ปุ่มต่าง ๆ ========== */
+.stButton > button {{
+    background: linear-gradient(135deg, #1F3864, #2C4A8A);
+    color: #fff; border: none; border-radius: 8px;
+    padding: .6rem 1.4rem; font-weight: 600; font-size: 1rem;
+    box-shadow: 0 4px 12px rgba(31,56,100,0.25);
+    transition: all .15s ease;
+}}
+.stButton > button:hover {{
+    background: linear-gradient(135deg, #2C4A8A, #1F3864);
+    box-shadow: 0 6px 16px rgba(31,56,100,0.35);
+    transform: translateY(-1px);
+}}
+.stButton > button:disabled {{
+    background: #E5E9F2;
+    color: #9AA3B2;
+    box-shadow: none;
+    transform: none;
+    cursor: not-allowed;
+}}
+.stDownloadButton > button {{
+    background: linear-gradient(135deg, #C9A227, #E0BA3A);
+    color: #1F3864; border: none; border-radius: 8px;
+    padding: .6rem 1.4rem; font-weight: 700; font-size: 1rem;
+    box-shadow: 0 4px 12px rgba(201,162,39,0.3);
+    transition: all .15s ease;
+}}
+.stDownloadButton > button:hover {{
+    transform: translateY(-1px);
+    box-shadow: 0 6px 16px rgba(201,162,39,0.4);
+}}
+
+/* ========== กล่องอัปโหลดไฟล์ ========== */
+[data-testid="stFileUploaderDropzone"] {{
+    border: 2px dashed #B7C3DA !important;
+    border-radius: 12px !important;
+    background: #F8FAFD !important;
+    transition: border-color .15s ease;
+}}
+[data-testid="stFileUploaderDropzone"]:hover {{
+    border-color: #1F3864 !important;
+}}
+
+/* ========== ช่องกรอกข้อความ / textarea ========== */
+.stTextArea textarea, .stTextInput input {{
+    border-radius: 8px !important;
+    border: 1px solid #D9E1F2 !important;
+}}
+.stTextArea textarea:focus, .stTextInput input:focus {{
+    border-color: #1F3864 !important;
+    box-shadow: 0 0 0 2px rgba(31,56,100,0.1) !important;
+}}
+
+/* ========== Footer ========== */
+.app-footer {{
+    text-align: center; color: #9AA3B2; font-size: .85rem;
+    margin-top: 2.5rem; padding-top: 1.2rem; border-top: 1px solid #E5E9F2;
+}}
 </style>
 <div class="banner">
-  <h1>ระบบตรวจข้อสอบ OMR</h1>
+  <h1>📝 ระบบตรวจข้อสอบ OMR</h1>
   <p>กระดาษคำตอบแบบ R1101 (สูงสุด {N_MAX} ข้อ, 5 ตัวเลือก) &nbsp;|&nbsp; ส่งออกรายงานเป็นไฟล์ Excel</p>
+  <span class="badge">⚡ ขับเคลื่อนด้วย Machine Learning</span>
 </div>
 """, unsafe_allow_html=True)
 
 
 def step(text):
-    st.markdown(f'<div class="step">{text}</div>', unsafe_allow_html=True)
+    m = re.match(r"ขั้นตอนที่\s*(\d+)\s*(.*)", text)
+    num, label = (m.group(1), m.group(2)) if m else ("", text)
+    st.markdown(f'<div class="step"><h3><span class="step-num">{num}</span> {label}</h3></div>',
+                unsafe_allow_html=True)
 
 
 c1, c2 = st.columns(2, gap="large")
@@ -516,7 +672,7 @@ if res:
 
         # 3 อันดับแรก
         top = df[df["อันดับ"] <= 3]
-        st.markdown('<div class="step">อันดับสูงสุด</div>', unsafe_allow_html=True)
+        step("อันดับสูงสุด")
         tcols = st.columns(min(3, len(top)))
         for col, (_, r) in zip(tcols, top.head(3).iterrows()):
             col.markdown(
@@ -582,3 +738,10 @@ if res:
                            file_name=f"exam_result_{datetime.now():%Y%m%d_%H%M}.xlsx",
                            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
                            type="primary")
+
+# ---------------- Footer (ชิดซ้ายสุด อยู่นอก if) ----------------
+st.markdown("""
+<div class="app-footer">
+    พัฒนาด้วย Python · OpenCV · Streamlit — โปรเจควิชา Machine Learning
+</div>
+""", unsafe_allow_html=True)
