@@ -568,7 +568,7 @@ header[data-testid="stHeader"] {{ background: transparent; }}
 <div class="banner">
   <h1>📝 ระบบตรวจข้อสอบ OMR</h1>
   <p>กระดาษคำตอบแบบ R1101 (สูงสุด {N_MAX} ข้อ, 5 ตัวเลือก) &nbsp;|&nbsp; ส่งออกรายงานเป็นไฟล์ Excel</p>
-  <span class="badge">⚡ ประมวลผลภาพอัตโนมัติ</span>
+  <span class="badge">⚡ ขับเคลื่อนด้วย Machine Learning</span>
 </div>
 """, unsafe_allow_html=True)
 
@@ -579,19 +579,6 @@ def step(text):
     st.markdown(f'<div class="step"><h3><span class="step-num">{num}</span> {label}</h3></div>',
                 unsafe_allow_html=True)
 
-
-with st.expander("📖 วิธีใช้งานและข้อแนะนำ"):
-    st.markdown(
-        "**รูปแบบเฉลยที่รับได้**\n"
-        "- เรียงต่อกัน เช่น `ABCDEABCDE` (ตามลำดับข้อ)\n"
-        "- ระบุเลขข้อ เช่น `1-A 2-C 3-B`\n\n"
-        "**การสแกนกระดาษคำตอบ**\n"
-        "- สแกนหรือถ่ายให้กระดาษตรง ไม่เอียง ไม่มีเงา ความละเอียดอย่างน้อย 150 dpi\n"
-        "- รองรับไฟล์ PNG, JPG, PDF และเลือกอัปโหลดได้หลายไฟล์พร้อมกัน\n\n"
-        "**ความหมายของสัญลักษณ์**\n"
-        "- `-` = ไม่ได้ตอบข้อนั้น\n"
-        "- `*` = ฝนมากกว่า 1 ตัวเลือก (นับเป็นผิด)\n"
-        "- `?` ในรหัส = อ่านรหัสไม่ได้ ควรตรวจกับกระดาษจริง")
 
 c1, c2 = st.columns(2, gap="large")
 with c1:
@@ -643,10 +630,6 @@ if st.button("เริ่มตรวจข้อสอบ", type="primary", di
         "xlsx": build_workbook(key, students, meta) if students else None,
     }
 
-if st.session_state.get("result") and st.button("ล้างผล / เริ่มชุดใหม่"):
-    del st.session_state["result"]
-    st.rerun()
-
 res = st.session_state.get("result")
 if res:
     for e in res["errors"]:
@@ -666,7 +649,6 @@ if res:
         df.insert(0, "อันดับ", df["คะแนน"].rank(method="min", ascending=False).astype(int))
         df = df.sort_values(["อันดับ", "ไฟล์"]).reset_index(drop=True)
 
-        step("ผลการตรวจ")
         bad = df[df["รหัสวิชา"].str.contains(r"\?") | df["เลขประจำตัวสอบ"].str.contains(r"\?")]
         if len(bad):
             st.warning(f"อ่านรหัสไม่ได้ {len(bad)} ฉบับ (แสดงเป็น ?) - "
@@ -679,21 +661,14 @@ if res:
                        + ", ".join(odd["ไฟล์"].head(5)) + (" ..." if len(odd) > 5 else ""))
 
         kr = kr20(key, students)
-        m = st.columns(4)
+        m = st.columns(6)
         m[0].metric("ผู้เข้าสอบ (คน)", len(df))
         m[1].metric("คะแนนเฉลี่ย", f"{df['คะแนน'].mean():.2f}")
-        m[2].metric("คะแนนสูงสุด", int(df["คะแนน"].max()))
-        m[3].metric("คะแนนต่ำสุด", int(df["คะแนน"].min()))
-        m2 = st.columns(4)
-        m2[0].metric("มัธยฐาน", f"{df['คะแนน'].median():.1f}")
-        m2[1].metric("S.D.", f"{df['คะแนน'].std():.2f}" if len(df) > 1 else "-")
-        m2[2].metric("ร้อยละเฉลี่ย", f"{df['ร้อยละ'].mean():.1f}%")
-        m2[3].metric("ความเชื่อมั่น (KR-20)", f"{kr:.2f}" if kr is not None else "-",
-                     help="ยิ่งใกล้ 1 ยิ่งเชื่อถือได้ (โดยทั่วไป ≥ 0.70 ถือว่ายอมรับได้) ต้องมีผู้สอบตั้งแต่ 2 คน")
-        st.download_button("ดาวน์โหลดรายงาน Excel", res["xlsx"],
-                           file_name=f"exam_result_{datetime.now():%Y%m%d_%H%M}.xlsx",
-                           mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                           type="primary")
+        m[2].metric("สูงสุด", int(df["คะแนน"].max()))
+        m[3].metric("ต่ำสุด", int(df["คะแนน"].min()))
+        m[4].metric("S.D.", f"{df['คะแนน'].std():.2f}" if len(df) > 1 else "-")
+        m[5].metric("ความเชื่อมั่น (KR-20)", f"{kr:.2f}" if kr is not None else "-",
+                    help="ยิ่งใกล้ 1 ยิ่งเชื่อถือได้ (โดยทั่วไป ≥ 0.70 ถือว่ายอมรับได้) ต้องมีผู้สอบตั้งแต่ 2 คน")
 
         # 3 อันดับแรก
         top = df[df["อันดับ"] <= 3]
@@ -712,20 +687,9 @@ if res:
         tab1, tab2, tab3, tab4 = st.tabs(
             ["ผลรายบุคคล", "ตรวจรายฉบับ", "วิเคราะห์รายข้อ", "การกระจายคะแนน"])
         with tab1:
-            f1, f2 = st.columns([3, 1])
-            q = f1.text_input("ค้นหา (ชื่อไฟล์ หรือ เลขประจำตัวสอบ)", key="search_box")
-            order = f2.selectbox("เรียงตาม", ["อันดับ", "ชื่อไฟล์"])
-            view = df
-            if q:
-                view = view[view["ไฟล์"].str.contains(q, case=False, na=False)
-                            | view["เลขประจำตัวสอบ"].astype(str).str.contains(q, case=False, na=False)]
-            if order == "ชื่อไฟล์":
-                view = view.sort_values("ไฟล์")
-            st.caption(f"แสดง {len(view)} จาก {len(df)} ฉบับ")
-
             def hl(row):
                 return ["background-color: #FFF2CC; font-weight: 600" if row["อันดับ"] <= 3 else ""] * len(row)
-            st.dataframe(view.style.apply(hl, axis=1), width="stretch", hide_index=True,
+            st.dataframe(df.style.apply(hl, axis=1), width="stretch", hide_index=True,
                          column_config={"ร้อยละ": st.column_config.ProgressColumn(
                              "ร้อยละ", min_value=0, max_value=100, format="%.1f")})
         with tab2:
@@ -770,10 +734,14 @@ if res:
             st.bar_chart(pd.DataFrame({"ช่วงคะแนน": bins, "จำนวนคน": cnt.values}).set_index("ช่วงคะแนน"),
                          color="#" + NAVY)
 
+        st.download_button("ดาวน์โหลดรายงาน Excel", res["xlsx"],
+                           file_name=f"exam_result_{datetime.now():%Y%m%d_%H%M}.xlsx",
+                           mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                           type="primary")
 
 # ---------------- Footer (ชิดซ้ายสุด อยู่นอก if) ----------------
 st.markdown("""
 <div class="app-footer">
-    พัฒนาด้วย Python · OpenCV · Streamlit — โปรเจควิชา Machine Learning<br>ไฟล์ที่อัปโหลดใช้ประมวลผลชั่วคราวและไม่ถูกจัดเก็บถาวร
+    พัฒนาด้วย Python · OpenCV · Streamlit — โปรเจควิชา Machine Learning
 </div>
 """, unsafe_allow_html=True)
